@@ -34,7 +34,7 @@
 			label = "reset";
 			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_RESTART>;
-			debounce-interval = <20>;
+
 		};
 
 		wps {
