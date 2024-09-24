@@ -7,22 +7,17 @@
 	model = "MERCURY KM08-708H";
 
 	aliases {
-		label-mac-device = "/ethernet@1e100000/mac@0";
-		led-boot = "/leds/wlan";
-		led-failsafe = "/leds/wlan";
-		led-upgrade = "/leds/wlan";
+		led-boot = "/leds/power";
 		serial0 = "/palmbus@1e000000/uartlite@c00";
 	};
 
 	chosen {
-		bootargs = "console=ttyS0,115200";
-		bootargs-override = "console=ttyS0,115200";
+		bootargs = "console=ttyS0,57600";
 	};
 
 	clkctrl {
 		#clock-cells = <0x01>;
 		compatible = "ralink,rt2880-clock";
-		phandle = <0x14>;
 	};
 
 	cpc@1fbf0000 {
@@ -57,24 +52,24 @@
 	ethernet@1e100000 {
 		#address-cells = <0x01>;
 		#size-cells = <0x00>;
-		clock-names = "ethif";
-		clocks = <0x02>;
+		clock-names = "fe\0ethif";
+		clocks = <0x0a 0x09 0x0a 0x16>;
 		compatible = "mediatek,mt7621-eth";
-		interrupt-parent = <0x01>;
+		interrupt-parent = <0x03>;
 		interrupts = <0x00 0x03 0x04>;
-		mediatek,ethsys = <0x0d>;
-		pinctrl-0 = <0x0e 0x0f 0x10>;
+		mediatek,ethsys = <0x0a>;
+		pinctrl-0 = <0x0f 0x10 0x11>;
 		pinctrl-names = "default";
 		reg = <0x1e100000 0x10000>;
 		reset-names = "fe\0eth";
-		resets = <0x03 0x06 0x03 0x17>;
+		resets = <0x05 0x06 0x05 0x17>;
 
 		mac@0 {
 			compatible = "mediatek,eth-mac";
-			mac-address-increment = <0x01>;
+			mac-address-increment = <0x03>;
 			nvmem-cell-names = "mac-address";
-			nvmem-cells = <0x11>;
-			phandle = <0x12>;
+			nvmem-cells = <0x12>;
+			phandle = <0x14>;
 			phy-mode = "rgmii";
 			reg = <0x00>;
 
@@ -87,14 +82,24 @@
 
 		mac@1 {
 			compatible = "mediatek,eth-mac";
-			phy-mode = "rgmii-rxid";
+			label = "lan1";
+			mac-address-increment = <0x02>;
+			nvmem-cell-names = "mac-address";
+			nvmem-cells = <0x12>;
+			phy-handle = <0x13>;
+			phy-mode = "rgmii";
 			reg = <0x01>;
-			status = "disabled";
+			status = "okay";
 		};
 
 		mdio-bus {
 			#address-cells = <0x01>;
 			#size-cells = <0x00>;
+
+			ethernet-phy@4 {
+				phandle = <0x13>;
+				reg = <0x04>;
+			};
 
 			switch@1f {
 				#interrupt-cells = <0x01>;
@@ -104,7 +109,7 @@
 				mediatek,mcm;
 				reg = <0x1f>;
 				reset-names = "mcm";
-				resets = <0x03 0x02>;
+				resets = <0x05 0x02>;
 
 				ports {
 					#address-cells = <0x01>;
@@ -112,8 +117,6 @@
 
 					port@0 {
 						label = "wan";
-						nvmem-cell-names = "mac-address";
-						nvmem-cells = <0x11>;
 						reg = <0x00>;
 						status = "okay";
 					};
@@ -139,12 +142,11 @@
 					port@4 {
 						label = "lan1";
 						reg = <0x04>;
-						status = "okay";
+						status = "disabled";
 					};
 
 					port@6 {
-						ethernet = <0x12>;
-						label = "cpu";
+						ethernet = <0x14>;
 						phy-mode = "rgmii";
 						reg = <0x06>;
 
@@ -164,11 +166,11 @@
 		compatible = "mti,gic";
 		interrupt-controller;
 		mti,reserved-cpu-vectors = <0x07>;
-		phandle = <0x01>;
+		phandle = <0x03>;
 		reg = <0x1fbc0000 0x2000>;
 
 		timer {
-			clocks = <0x08 0x00>;
+			clocks = <0x0a 0x01>;
 			compatible = "mti,gic-timer";
 			interrupts = <0x01 0x01 0x00>;
 		};
@@ -178,15 +180,10 @@
 		compatible = "gpio-keys";
 
 		reset {
-			gpios = <0x17 0x03 0x01>;
+			debounce-interval = <0x05>;
+			gpios = <0x16 0x03 0x01>;
 			label = "reset";
 			linux,code = <0x198>;
-		};
-
-		wps {
-			gpios = <0x17 0x12 0x01>;
-			label = "wps";
-			linux,code = <0x211>;
 		};
 	};
 
@@ -194,14 +191,14 @@
 		compatible = "gpio-leds";
 
 		lan2 {
-			gpios = <0x17 0x0e 0x01>;
+			gpios = <0x16 0x0e 0x01>;
 			label = "green:lan2";
+			linux,default-trigger = "mt7530-0:03:link";
 		};
 
-		wlan {
-			gpios = <0x17 0x0d 0x01>;
-			label = "green:wlan";
-			linux,default-trigger = "phy0-ap0";
+		power {
+			gpios = <0x16 0x0d 0x00>;
+			label = "green:power";
 		};
 	};
 
@@ -212,7 +209,7 @@
 
 	nand@1e003000 {
 		clock-names = "nfi_clk";
-		clocks = <0x0c>;
+		clocks = <0x0e>;
 		compatible = "mediatek,mt7621-nfc";
 		reg = <0x1e003000 0x800 0x1e003800 0x800>;
 		reg-names = "nfi\0ecc";
@@ -224,7 +221,7 @@
 			compatible = "fixed-partitions";
 
 			partition@0 {
-				label = "bootloader";
+				label = "Bootloader";
 				read-only;
 				reg = <0x00 0x80000>;
 			};
@@ -233,65 +230,31 @@
 				#address-cells = <0x01>;
 				#size-cells = <0x01>;
 				compatible = "nvmem-cells";
-				label = "bdinfo";
+				label = "Factory";
 				phandle = <0x18>;
 				read-only;
 				reg = <0x100000 0x40000>;
 
 				macaddr@4 {
+					phandle = <0x12>;
 					reg = <0x04 0x06>;
 				};
 			};
 
 			partition@140000 {
-				#address-cells = <0x01>;
-				#size-cells = <0x01>;
-				compatible = "denx,uimage";
-				label = "firmware";
-				reg = <0x140000 0x7100000>;
+				label = "kernel";
+				reg = <0x140000 0x400000>;
 			};
 
-			partition@7240000 {
-				label = "recoverk";
-				read-only;
-				reg = <0x7240000 0x720000>;
-			};
-
-			partition@7960000 {
-				label = "recoverr";
-				read-only;
-				reg = <0x7960000 0xe0000>;
-			};
-
-			partition@7a40000 {
-				label = "nvram";
-				read-only;
-				reg = <0x7a40000 0xe0000>;
-			};
-
-			partition@7b20000 {
-				label = "log";
-				read-only;
-				reg = <0x7b20000 0x4e0000>;
+			partition@540000 {
+				label = "ubi";
+				reg = <0x540000 0x7a40000>;
 			};
 
 			partition@80000 {
-				label = "bootloader-env";
-				reg = <0x80000 0x40000>;
-			};
-
-			partition@c0000 {
-				#address-cells = <0x01>;
-				#size-cells = <0x01>;
-				compatible = "nvmem-cells";
-				label = "factory";
+				label = "Config";
 				read-only;
-				reg = <0xc0000 0x40000>;
-
-				macaddr@4 {
-					phandle = <0x11>;
-					reg = <0x04 0x06>;
-				};
+				reg = <0x80000 0x80000>;
 			};
 		};
 	};
@@ -300,7 +263,7 @@
 		#clock-cells = <0x00>;
 		clock-frequency = <0x7735940>;
 		compatible = "fixed-clock";
-		phandle = <0x0c>;
+		phandle = <0x0e>;
 	};
 
 	palmbus@1e000000 {
@@ -315,12 +278,12 @@
 			#dma-channels = <0x10>;
 			#dma-requests = <0x10>;
 			compatible = "ralink,rt3883-gdma";
-			interrupt-parent = <0x01>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x0d 0x04>;
-			phandle = <0x05>;
+			phandle = <0x07>;
 			reg = <0x2800 0x800>;
 			reset-names = "dma";
-			resets = <0x03 0x0e>;
+			resets = <0x05 0x0e>;
 			status = "disabled";
 		};
 
@@ -329,10 +292,11 @@
 			#interrupt-cells = <0x02>;
 			compatible = "mediatek,mt7621-gpio";
 			gpio-controller;
+			gpio-ranges = <0x02 0x00 0x00 0x5f>;
 			interrupt-controller;
-			interrupt-parent = <0x01>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x0c 0x04>;
-			phandle = <0x17>;
+			phandle = <0x16>;
 			reg = <0x600 0x100>;
 		};
 
@@ -341,37 +305,37 @@
 			#dma-channels = <0x01>;
 			#dma-requests = <0x01>;
 			compatible = "mediatek,mt7621-hsdma";
-			interrupt-parent = <0x01>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x0b 0x04>;
 			reg = <0x7000 0x1000>;
 			reset-names = "hsdma";
-			resets = <0x03 0x05>;
+			resets = <0x05 0x05>;
 			status = "disabled";
 		};
 
 		i2c@900 {
 			#address-cells = <0x01>;
 			#size-cells = <0x00>;
-			clocks = <0x02>;
+			clocks = <0x04>;
 			compatible = "mediatek,mt7621-i2c";
-			pinctrl-0 = <0x04>;
+			pinctrl-0 = <0x06>;
 			pinctrl-names = "default";
 			reg = <0x900 0x100>;
 			reset-names = "i2c";
-			resets = <0x03 0x10>;
+			resets = <0x05 0x10>;
 			status = "disabled";
 		};
 
 		i2s@a00 {
-			clocks = <0x02>;
+			clocks = <0x04>;
 			compatible = "mediatek,mt7621-i2s";
 			dma-names = "tx\0rx";
-			dmas = <0x05 0x04 0x05 0x06>;
-			interrupt-parent = <0x01>;
+			dmas = <0x07 0x04 0x07 0x06>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x10 0x04>;
 			reg = <0xa00 0x100>;
 			reset-names = "i2s";
-			resets = <0x03 0x11>;
+			resets = <0x05 0x11>;
 			rxdma-req = <0x03>;
 			status = "disabled";
 			txdma-req = <0x02>;
@@ -380,42 +344,46 @@
 		spi@b00 {
 			#address-cells = <0x01>;
 			#size-cells = <0x00>;
-			clocks = <0x08 0x01>;
+			clocks = <0x0a 0x02>;
 			compatible = "ralink,mt7621-spi";
-			pinctrl-0 = <0x09>;
+			pinctrl-0 = <0x0b>;
 			pinctrl-names = "default";
 			reg = <0xb00 0x100>;
 			reset-names = "spi";
-			resets = <0x03 0x12>;
+			resets = <0x05 0x12>;
 			status = "disabled";
 		};
 
 		syscon@0 {
-			compatible = "mtk,mt7621-sysc\0syscon";
-			phandle = <0x0d>;
+			#clock-cells = <0x01>;
+			clock-output-names = [78 74 61 6c 00 63 70 75 00 62 75 73 28 6d 0a 35 6d 0d 30 6d 15 30 6d 17 30 6d 00];
+			compatible = "mediatek,mt7621-sysc\0syscon";
+			phandle = <0x0a>;
+			ralink,memctl = <0x01>;
 			reg = <0x00 0x100>;
 		};
 
 		syscon@5000 {
-			compatible = "mtk,mt7621-memc\0syscon";
+			compatible = "mediatek,mt7621-memc\0syscon";
+			phandle = <0x01>;
 			reg = <0x5000 0x1000>;
 		};
 
 		systick@500 {
 			compatible = "ralink,mt7621-systick\0ralink,cevt-systick";
-			interrupt-parent = <0x01>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x05 0x04>;
 			reg = <0x500 0x10>;
 			reset-names = "intc";
-			resets = <0x03 0x1c>;
+			resets = <0x05 0x1c>;
 		};
 
 		uartlite2@d00 {
 			clock-frequency = <0x2faf080>;
 			compatible = "ns16550a";
-			interrupt-parent = <0x01>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x1b 0x04>;
-			pinctrl-0 = <0x06>;
+			pinctrl-0 = <0x08>;
 			pinctrl-names = "default";
 			reg = <0xd00 0x100>;
 			reg-io-width = <0x04>;
@@ -426,9 +394,9 @@
 		uartlite3@e00 {
 			clock-frequency = <0x2faf080>;
 			compatible = "ns16550a";
-			interrupt-parent = <0x01>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x1c 0x04>;
-			pinctrl-0 = <0x07>;
+			pinctrl-0 = <0x09>;
 			pinctrl-names = "default";
 			reg = <0xe00 0x100>;
 			reg-io-width = <0x04>;
@@ -439,7 +407,7 @@
 		uartlite@c00 {
 			clock-frequency = <0x2faf080>;
 			compatible = "ns16550a";
-			interrupt-parent = <0x01>;
+			interrupt-parent = <0x03>;
 			interrupts = <0x00 0x1a 0x04>;
 			no-loopback-test;
 			reg = <0xc00 0x100>;
@@ -455,48 +423,51 @@
 
 	pcie-phy@1e149000 {
 		#phy-cells = <0x01>;
+		clocks = <0x0a 0x00>;
 		compatible = "mediatek,mt7621-pci-phy";
-		phandle = <0x15>;
+		phandle = <0x17>;
 		reg = <0x1e149000 0x700>;
 	};
 
 	pcie-phy@1e14a000 {
 		#phy-cells = <0x01>;
+		clocks = <0x0a 0x00>;
 		compatible = "mediatek,mt7621-pci-phy";
-		phandle = <0x16>;
+		phandle = <0x19>;
 		reg = <0x1e14a000 0x700>;
 	};
 
 	pcie@1e140000 {
 		#address-cells = <0x03>;
+		#interrupt-cells = <0x01>;
 		#size-cells = <0x02>;
-		clock-names = "pcie0\0pcie1\0pcie2";
-		clocks = <0x14 0x18 0x14 0x19 0x14 0x1a>;
 		compatible = "mediatek,mt7621-pci";
 		device_type = "pci";
-		interrupt-parent = <0x01>;
-		interrupts = <0x00 0x04 0x04 0x00 0x18 0x04 0x00 0x19 0x04>;
-		phy-names = "pcie-phy0\0pcie-phy2";
-		phys = <0x15 0x01 0x16 0x00>;
-		pinctrl-0 = <0x13>;
+		interrupt-map = <0x00 0x00 0x00 0x00 0x03 0x00 0x04 0x04 0x800 0x00 0x00 0x00 0x03 0x00 0x18 0x04 0x1000 0x00 0x00 0x00 0x03 0x00 0x19 0x04>;
+		interrupt-map-mask = <0xf800 0x00 0x00 0x00>;
+		pinctrl-0 = <0x15>;
 		pinctrl-names = "default";
-		ranges = <0x2000000 0x00 0x00 0x60000000 0x00 0x10000000 0x1000000 0x00 0x00 0x1e160000 0x00 0x10000>;
+		ranges = <0x2000000 0x00 0x60000000 0x60000000 0x00 0x10000000 0x1000000 0x00 0x00 0x1e160000 0x00 0x10000>;
 		reg = <0x1e140000 0x100 0x1e142000 0x100 0x1e143000 0x100 0x1e144000 0x100>;
-		reset-gpios = <0x17 0x13 0x01>;
-		reset-names = "pcie0\0pcie1\0pcie2";
-		resets = <0x03 0x18 0x03 0x19 0x03 0x1a>;
+		reset-gpios = <0x16 0x13 0x01>;
 		status = "okay";
 
 		pcie@0,0 {
 			#address-cells = <0x03>;
+			#interrupt-cells = <0x01>;
 			#size-cells = <0x02>;
+			clocks = <0x0a 0x17>;
 			device_type = "pci";
+			interrupt-map = <0x00 0x00 0x00 0x00 0x03 0x00 0x04 0x04>;
+			interrupt-map-mask = <0x00 0x00 0x00 0x00>;
+			phy-names = "pcie-phy0";
+			phys = <0x17 0x01>;
 			ranges;
 			reg = <0x00 0x00 0x00 0x00 0x00>;
+			resets = <0x05 0x18>;
 
-			mt7615d@0,0 {
-				compatible = "pci14c3,7615";
-				mediatek,firmware-eeprom = "mt7615e_eeprom.bin";
+			wifi@0,0 {
+				compatible = "mediatek,mt76";
 				mediatek,mtd-eeprom = <0x18 0x00>;
 				reg = <0x00 0x00 0x00 0x00 0x00>;
 			};
@@ -504,28 +475,43 @@
 
 		pcie@1,0 {
 			#address-cells = <0x03>;
+			#interrupt-cells = <0x01>;
 			#size-cells = <0x02>;
+			clocks = <0x0a 0x18>;
 			device_type = "pci";
+			interrupt-map = <0x00 0x00 0x00 0x00 0x03 0x00 0x18 0x04>;
+			interrupt-map-mask = <0x00 0x00 0x00 0x00>;
+			phy-names = "pcie-phy1";
+			phys = <0x17 0x01>;
 			ranges;
 			reg = <0x800 0x00 0x00 0x00 0x00>;
+			resets = <0x05 0x19>;
 		};
 
 		pcie@2,0 {
 			#address-cells = <0x03>;
+			#interrupt-cells = <0x01>;
 			#size-cells = <0x02>;
+			clocks = <0x0a 0x19>;
 			device_type = "pci";
+			interrupt-map = <0x00 0x00 0x00 0x00 0x03 0x00 0x19 0x04>;
+			interrupt-map-mask = <0x00 0x00 0x00 0x00>;
+			phy-names = "pcie-phy2";
+			phys = <0x19 0x00>;
 			ranges;
 			reg = <0x1000 0x00 0x00 0x00 0x00>;
+			resets = <0x05 0x1a>;
 		};
 	};
 
 	pinctrl {
 		compatible = "ralink,rt2880-pinmux";
-		pinctrl-0 = <0x0a>;
+		phandle = <0x02>;
+		pinctrl-0 = <0x0c>;
 		pinctrl-names = "default";
 
 		i2c_pins {
-			phandle = <0x04>;
+			phandle = <0x06>;
 
 			i2c_pins {
 				function = "i2c";
@@ -534,7 +520,7 @@
 		};
 
 		mdio {
-			phandle = <0x0e>;
+			phandle = <0x0f>;
 
 			mdio {
 				function = "mdio";
@@ -556,7 +542,7 @@
 		};
 
 		pcie {
-			phandle = <0x13>;
+			phandle = <0x15>;
 
 			pcie {
 				function = "gpio";
@@ -565,16 +551,16 @@
 		};
 
 		pinctrl0 {
-			phandle = <0x0a>;
+			phandle = <0x0c>;
 
 			gpio {
 				function = "gpio";
-				groups = "uart2\0uart3\0jtag\0wdt";
+				groups = "i2c\0jtag\0uart3\0wdt";
 			};
 		};
 
 		rgmii1 {
-			phandle = <0x0f>;
+			phandle = <0x10>;
 
 			rgmii1 {
 				function = "rgmii1";
@@ -583,7 +569,7 @@
 		};
 
 		rgmii2 {
-			phandle = <0x10>;
+			phandle = <0x11>;
 
 			rgmii2 {
 				function = "rgmii2";
@@ -592,7 +578,7 @@
 		};
 
 		sdhci {
-			phandle = <0x0b>;
+			phandle = <0x0d>;
 
 			sdhci {
 				function = "sdhci";
@@ -601,7 +587,7 @@
 		};
 
 		spi_pins {
-			phandle = <0x09>;
+			phandle = <0x0b>;
 
 			spi_pins {
 				function = "spi";
@@ -618,7 +604,7 @@
 		};
 
 		uart2 {
-			phandle = <0x06>;
+			phandle = <0x08>;
 
 			uart2 {
 				function = "uart2";
@@ -627,7 +613,7 @@
 		};
 
 		uart3 {
-			phandle = <0x07>;
+			phandle = <0x09>;
 
 			uart3 {
 				function = "uart3";
@@ -636,24 +622,17 @@
 		};
 	};
 
-	pll {
-		#clock-cells = <0x01>;
-		clock-output-names = "cpu\0bus";
-		compatible = "mediatek,mt7621-pll\0syscon";
-		phandle = <0x08>;
-	};
-
 	rstctrl {
 		#reset-cells = <0x01>;
 		compatible = "ralink,rt2880-reset";
-		phandle = <0x03>;
+		phandle = <0x05>;
 	};
 
 	sdhci@1e130000 {
 		compatible = "ralink,mt7620-sdhci";
-		interrupt-parent = <0x01>;
+		interrupt-parent = <0x03>;
 		interrupts = <0x00 0x14 0x04>;
-		pinctrl-0 = <0x0b>;
+		pinctrl-0 = <0x0d>;
 		pinctrl-names = "default";
 		reg = <0x1e130000 0x4000>;
 		status = "disabled";
@@ -663,16 +642,16 @@
 		#clock-cells = <0x00>;
 		clock-frequency = <0x2faf080>;
 		compatible = "fixed-clock";
-		phandle = <0x02>;
+		phandle = <0x04>;
 	};
 
 	xhci@1e1c0000 {
 		#address-cells = <0x01>;
 		#size-cells = <0x00>;
 		clock-names = "sys_ck";
-		clocks = <0x02>;
+		clocks = <0x04>;
 		compatible = "mediatek,mt8173-xhci";
-		interrupt-parent = <0x01>;
+		interrupt-parent = <0x03>;
 		interrupts = <0x00 0x16 0x04>;
 		reg = <0x1e1c0000 0x1000 0x1e1d0700 0x100>;
 		reg-names = "mac\0ippc";
