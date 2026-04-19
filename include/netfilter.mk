@@ -183,7 +183,7 @@ $(eval $(if $(NF_KMOD),$(call nf_add,IPT_NAT6,CONFIG_IP6_NF_NAT, $(P_V6)ip6table
 $(eval $(if $(NF_KMOD),$(call nf_add,IPT_NAT6,CONFIG_IP6_NF_TARGET_NPT, $(P_V6)ip6t_NPT),))
 
 # userland only
-$(eval $(if $(NF_KMOD),,$(call nf_add,IPT_NAT,CONFIG_NF_NAT, ipt_SNAT ipt_DNAT)))
+$(eval $(if $(NF_KMOD),,$(call nf_add,IPT_NAT,CONFIG_NF_NAT, ipt_NAT)))
 $(eval $(if $(NF_KMOD),,$(call nf_add,IPT_NAT6,CONFIG_IP6_NF_TARGET_NPT, ip6t_DNPT ip6t_SNPT)))
 
 $(eval $(call nf_add,IPT_NAT,CONFIG_NETFILTER_XT_TARGET_MASQUERADE, $(P_XT)xt_MASQUERADE))
@@ -358,7 +358,6 @@ $(eval $(if $(NF_KMOD),$(call nf_add,NFT_CONNLIMIT,CONFIG_NFT_CONNLIMIT, $(P_XT)
 IPT_BUILTIN += $(NF_IPT-y) $(NF_IPT-m)
 IPT_BUILTIN += $(IPT_CORE-y) $(IPT_CORE-m)
 IPT_BUILTIN += $(NF_CONNTRACK-y)
-IPT_BUILTIN += $(NF_CONNTRACK6-y)
 IPT_BUILTIN += $(IPT_CONNTRACK-y)
 IPT_BUILTIN += $(IPT_CONNTRACK_EXTRA-y)
 IPT_BUILTIN += $(IPT_EXTRA-y)
